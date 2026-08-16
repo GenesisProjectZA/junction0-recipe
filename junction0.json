@@ -1,8 +1,8 @@
 {
   "name": "junction0",
   "display_name": "Junction0",
-  "description": "Rust-powered Linux with unified bus, process unification, intelligent resource management, and containerized driver isolation. Built on Alpine Linux for minimal footprint.",
-  "base_image": "alpine",
+  "description": "Rust-powered Linux with unified bus, process unification, intelligent resource management, and containerized driver isolation. Built on Debian for minimal footprint.",
+  "base_image": "debian-trixie",
   "use_case": "Desktop",
   "hardware": {
     "platform": "pc",
@@ -16,10 +16,10 @@
   "os": {
     "features": ["ssh", "desktop"],
     "packages": [
-      "rust",
+      "rustc",
       "cargo",
-      "musl-dev",
-      "linux-headers",
+      "build-essential",
+      "linux-headers-amd64",
       "dbus",
       "udev",
       "polkit",
@@ -53,7 +53,7 @@
         "username": "junction0",
         "full_name": "Junction0 User",
         "groups": ["sudo", "wheel", "audio", "video", "input"],
-        "shell": "/bin/ash"
+        "shell": "/bin/bash"
       }
     ],
     "services": [
@@ -257,14 +257,14 @@
           ]
         },
         {
-          "description": "Verify Alpine minimal footprint",
+          "description": "Verify Debian minimal footprint",
           "assertions": [
             {
               "type": "command_output",
-              "description": "System is based on Alpine Linux",
+              "description": "System is based on Debian Linux",
               "params": {
                 "command": "cat /etc/os-release | head -1",
-                "expected_pattern": ".*Alpine.*"
+                "expected_pattern": ".*Debian.*"
               }
             }
           ]
