@@ -1,0 +1,276 @@
+{
+  "name": "junction0",
+  "display_name": "Junction0",
+  "description": "Rust-powered Linux with unified bus, process unification, intelligent resource management, and containerized driver isolation. Built on Alpine Linux for minimal footprint.",
+  "base_image": "alpine",
+  "use_case": "Desktop",
+  "hardware": {
+    "platform": "pc",
+    "architecture": "x86_64",
+    "gpu": null,
+    "min_cpu_cores": 2,
+    "min_memory_gb": 4,
+    "min_storage_gb": 16,
+    "nic_count": 1
+  },
+  "os": {
+    "features": ["ssh", "desktop"],
+    "packages": [
+      "rust",
+      "cargo",
+      "musl-dev",
+      "linux-headers",
+      "dbus",
+      "udev",
+      "polkit",
+      "pipewire",
+      "wireplumber"
+    ],
+    "custom_packages": [
+      {
+        "name": "junction0-busd",
+        "git_url": "https://github.com/GenesisProjectZA/junction0-busd.git",
+        "branch": "main"
+      },
+      {
+        "name": "junction0-pid",
+        "git_url": "https://github.com/GenesisProjectZA/junction0-pid.git",
+        "branch": "main"
+      },
+      {
+        "name": "junction0-res",
+        "git_url": "https://github.com/GenesisProjectZA/junction0-res.git",
+        "branch": "main"
+      },
+      {
+        "name": "junction0-drv",
+        "git_url": "https://github.com/GenesisProjectZA/junction0-drv.git",
+        "branch": "main"
+      }
+    ],
+    "users": [
+      {
+        "username": "junction0",
+        "full_name": "Junction0 User",
+        "groups": ["sudo", "wheel", "audio", "video", "input"],
+        "shell": "/bin/ash"
+      }
+    ],
+    "services": [
+      {
+        "name": "junction0-busd",
+        "enabled": true,
+        "config": {
+          "description": "Unified system bus - central IPC for all Junction0 services"
+        }
+      },
+      {
+        "name": "junction0-pid",
+        "enabled": true,
+        "config": {
+          "description": "Process unification watcher - groups duplicate processes"
+        }
+      },
+      {
+        "name": "junction0-res",
+        "enabled": true,
+        "config": {
+          "description": "Intelligent resource manager - cgroups v2, memory/CPU optimization"
+        }
+      },
+      {
+        "name": "junction0-drv",
+        "enabled": true,
+        "config": {
+          "description": "Containerized driver installer - C drivers isolated in namespaces"
+        }
+      },
+      {
+        "name": "dbus",
+        "enabled": true,
+        "config": {}
+      },
+      {
+        "name": "udev",
+        "enabled": true,
+        "config": {}
+      }
+    ],
+    "security": {
+      "hardening_level": "standard",
+      "audit_logging": true
+    },
+    "installer": {
+      "enabled": false
+    },
+    "startup_scripts": [
+      {
+        "name": "junction0-init-bus",
+        "description": "Initialize Junction0 unified bus on first boot",
+        "command": "set -Eeuo pipefail\nmkdir -p /run/junction0\nchown junction0:junction0 /run/junction0\njunction0-busd --init || true",
+        "packages": ["junction0-busd"],
+        "run_as": "root",
+        "after": "local.target"
+      },
+      {
+        "name": "junction0-init-pid",
+        "description": "Start process unification watcher",
+        "command": "set -Eeuo pipefail\njunction0-pid --daemon || true",
+        "packages": ["junction0-pid"],
+        "run_as": "root",
+        "after": "junction0-init-bus.service"
+      },
+      {
+        "name": "junction0-init-res",
+        "description": "Start intelligent resource manager",
+        "command": "set -Eeuo pipefail\njunction0-res --daemon || true",
+        "packages": ["junction0-res"],
+        "run_as": "root",
+        "after": "junction0-init-pid.service"
+      },
+      {
+        "name": "junction0-init-drv",
+        "description": "Initialize containerized driver system",
+        "command": "set -Eeuo pipefail\njunction0-drv --init || true",
+        "packages": ["junction0-drv"],
+        "run_as": "root",
+        "after": "junction0-init-res.service"
+      },
+      {
+        "name": "junction0-rust-check",
+        "description": "Verify Rust components are installed and functional",
+        "command": "set -Eeuo pipefail\njunction0-busd --version && junction0-pid --version && junction0-res --version && junction0-drv --version",
+        "packages": ["junction0-busd", "junction0-pid", "junction0-res", "junction0-drv"],
+        "run_as": "root",
+        "after": "local.target"
+      }
+    ],
+    "desktop_settings": {
+      "color_scheme": "prefer-dark"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "junction0-smoke",
+      "name": "Junction0 Core Services Smoke Test",
+      "enabled": true,
+      "tests": ["boot", "login", "packages"],
+      "custom_tests": [
+        {
+          "description": "Verify Junction0 Rust services are installed",
+          "assertions": [
+            {
+              "type": "package_installed",
+              "description": "junction0-busd package is installed",
+              "params": {"package": "junction0-busd"}
+            },
+            {
+              "type": "package_installed",
+              "description": "junction0-pid package is installed",
+              "params": {"package": "junction0-pid"}
+            },
+            {
+              "type": "package_installed",
+              "description": "junction0-res package is installed",
+              "params": {"package": "junction0-res"}
+            },
+            {
+              "type": "package_installed",
+              "description": "junction0-drv package is installed",
+              "params": {"package": "junction0-drv"}
+            }
+          ]
+        },
+        {
+          "description": "Verify Junction0 services are running",
+          "assertions": [
+            {
+              "type": "service_running",
+              "description": "junction0-busd service is active",
+              "params": {"service": "junction0-busd"}
+            },
+            {
+              "type": "service_running",
+              "description": "junction0-pid service is active",
+              "params": {"service": "junction0-pid"}
+            },
+            {
+              "type": "service_running",
+              "description": "junction0-res service is active",
+              "params": {"service": "junction0-res"}
+            },
+            {
+              "type": "service_running",
+              "description": "junction0-drv service is active",
+              "params": {"service": "junction0-drv"}
+            }
+          ]
+        },
+        {
+          "description": "Verify Rust binaries execute correctly",
+          "assertions": [
+            {
+              "type": "command_succeeds",
+              "description": "junction0-busd --version executes successfully",
+              "params": {"command": "junction0-busd --version"}
+            },
+            {
+              "type": "command_succeeds",
+              "description": "junction0-pid --version executes successfully",
+              "params": {"command": "junction0-pid --version"}
+            },
+            {
+              "type": "command_succeeds",
+              "description": "junction0-res --version executes successfully",
+              "params": {"command": "junction0-res --version"}
+            },
+            {
+              "type": "command_succeeds",
+              "description": "junction0-drv --version executes successfully",
+              "params": {"command": "junction0-drv --version"}
+            }
+          ]
+        },
+        {
+          "description": "Verify unified bus IPC is functional",
+          "assertions": [
+            {
+              "type": "port_listening",
+              "description": "junction0-busd listens on IPC socket",
+              "params": {"port": 9553, "protocol": "tcp"}
+            }
+          ]
+        },
+        {
+          "description": "Verify Rust is available on the system",
+          "assertions": [
+            {
+              "type": "command_succeeds",
+              "description": "rustc compiler is available",
+              "params": {"command": "rustc --version"}
+            },
+            {
+              "type": "command_succeeds",
+              "description": "cargo package manager is available",
+              "params": {"command": "cargo --version"}
+            }
+          ]
+        },
+        {
+          "description": "Verify Alpine minimal footprint",
+          "assertions": [
+            {
+              "type": "command_output",
+              "description": "System is based on Alpine Linux",
+              "params": {
+                "command": "cat /etc/os-release | head -1",
+                "expected_pattern": ".*Alpine.*"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "publish_to": ["local"]
+}
