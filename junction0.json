@@ -1,8 +1,8 @@
 {
   "name": "junction0",
   "display_name": "Junction0",
-  "description": "Rust-powered Linux with unified bus, process unification, intelligent resource management, and containerized driver isolation. Built on Debian for minimal footprint.",
-  "base_image": "debian-trixie",
+  "description": "Rust-powered Linux with unified bus, process unification, intelligent resource management, and containerized driver isolation. Built on Arch Linux for minimal footprint.",
+  "base_image": "arch-rolling",
   "use_case": "Desktop",
   "hardware": {
     "platform": "pc",
@@ -16,10 +16,10 @@
   "os": {
     "features": ["ssh", "desktop"],
     "packages": [
-      "rustc",
+      "rust",
       "cargo",
-      "build-essential",
-      "linux-headers-amd64",
+      "base-devel",
+      "linux-headers",
       "dbus",
       "udev",
       "polkit",
@@ -257,14 +257,14 @@
           ]
         },
         {
-          "description": "Verify Debian minimal footprint",
+          "description": "Verify Arch Linux minimal footprint",
           "assertions": [
             {
               "type": "command_output",
-              "description": "System is based on Debian Linux",
+              "description": "System is based on Arch Linux",
               "params": {
                 "command": "cat /etc/os-release | head -1",
-                "expected_pattern": ".*Debian.*"
+                "expected_pattern": ".*Arch.*"
               }
             }
           ]
